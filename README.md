@@ -121,6 +121,8 @@ To evaluate a NN run
 For more options run
 
     python train.py --help
+    
+Expected to work on Python 3.6 or later 
 
     
  
