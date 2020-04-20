@@ -16,10 +16,10 @@ class Program:
 
 M = 4  # number of look ahead characters (including current)
 H_LAYERS = 200
-PROGRAM = Program.EVALUATE
+PROGRAM = Program.TRAIN
 
-MODEL_FILE = f"model_{M}_{H_LAYERS}.json"
-MODEL_WEIGHTS_FILE = f"model_{M}_{H_LAYERS}.h5"
+# MODEL_FILE = f"model_{M}_{H_LAYERS}.json"
+# MODEL_WEIGHTS_FILE = f"model_{M}_{H_LAYERS}.h5"
 
 # def get_random_word(words, char_map):
 #     word = random.choice(words)
@@ -65,7 +65,7 @@ def get_test_word(char_map):
     # create a sequence of random numbers in [0,1]
     X = np.array([char_map[c] for i in range(LW) for c in word[i:i+M]])
     X = to_categorical(X, num_classes=LC)
-    y = np.array([root_id > 0 for root_id in root])
+    y = np.array(root)
 
     X = X.reshape((1, -1, LC*M))
     y = y.reshape((1, -1, 1))
@@ -73,29 +73,36 @@ def get_test_word(char_map):
     return X, y
 
 
-def save_model(model):
+def save_model(model, tag):
     # serialize model to JSON
     model_json = model.to_json()
-    with open(MODEL_FILE, "w") as json_file:
+    model_file = f"{tag}.json"
+    model_weights_file = f"{tag}.h5"
+
+    with open(model_file, "w") as json_file:
         json_file.write(model_json)
 
     # serialize weights to HDF5
-    model.save_weights(MODEL_WEIGHTS_FILE)
+    model.save_weights(model_weights_file)
     print("Saved model to disk")
 
 
-def load_model():
-    with open(MODEL_FILE, 'r') as json_file:
+def load_model(tag):
+    model_file = f"{tag}.json"
+    model_weights_file = f"{tag}.h5"
+
+    with open(model_file, 'r') as json_file:
         loaded_model_json = json_file.read()
 
     model = model_from_json(loaded_model_json)
     # load weights into new model
-    model.load_weights(MODEL_WEIGHTS_FILE)
+    model.load_weights(model_weights_file)
     print("Loaded model from disk")
+
     return model
 
 
-def main_train():
+def main_train(tag):
     char_map = ds.get_char_mapping()
     words = ds.get_annotated_words(get_list=True)
 
@@ -106,7 +113,7 @@ def main_train():
 
     # define LSTM
     try:
-        model = load_model()
+        model = load_model(tag)
     except FileNotFoundError:
         model = Sequential()
         model.add(LSTM(H_LAYERS, return_sequences=True, input_shape=(None, LC*M)))
@@ -126,37 +133,43 @@ def main_train():
         except:
             print(f"Error while training with word: {word} - Skipping word")
 
-    save_model(model)
+    save_model(model, tag)
 
 
-def main_evaluate():
+def main_evaluate(tag):
     char_map = ds.get_char_mapping()
-    model = load_model()
+    model = load_model(tag)
 
     # evaluate LSTM
     X, y = get_test_word(char_map)
     yhat = model.predict_classes(X, verbose=0)
     for yi, yhati in zip(y, yhat):
-        print(f"Expected: {yi}, Predicted: {yhati}")
+        print(f"Expected: {yi.flatten()}")
+        print(f"Predicted: {yhati.flatten()}")
 
 
-def main():
+def main(tag):
     if PROGRAM == Program.TRAIN:
-        main_train()
+        main_train(tag)
     elif PROGRAM == Program.EVALUATE:
-        main_evaluate()
+        main_evaluate(tag)
 
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hlayers", nargs='?', const=H_LAYERS, type=float, default=H_LAYERS)
-    parser.add_argument("--window", nargs='?', const=M, type=float, default=M)
-    parser.add_argument("--program", nargs='?', const=PROGRAM, type=int, default=PROGRAM)
+    parser.add_argument("--hlayers", help='number of hidden layers of LSTM',
+                        nargs='?', const=H_LAYERS, type=float, default=H_LAYERS)
+    parser.add_argument("--window", help='size of character window that is used as input',
+                        nargs='?', const=M, type=float, default=M)
+    parser.add_argument("--program", help='1 for train and 2 for evaluation',
+                        nargs='?', const=PROGRAM, type=int, default=PROGRAM)
     args = parser.parse_args()
 
     H_LAYERS = args.hlayers
     M = args.window
     PROGRAM = args.program
-    main()
+    tag = f"model_{M}_{H_LAYERS}"
+
+    main(tag)

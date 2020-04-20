@@ -108,5 +108,19 @@ that combine existing Greek words will be successfully
 classified.
 
 
-TODO
+Run Training
 ==
+To train a NN run
+
+    python train.py --program 1
+    
+To evaluate a NN run
+
+    python train.py --program 2
+    
+For more options run
+
+    python train.py --help
+
+    
+ 
