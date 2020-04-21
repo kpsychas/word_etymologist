@@ -108,8 +108,11 @@ def main_train(tag):
 
     LC = len(char_map)
 
-    # return_sequences will return full y sequence and that is what we
-    # are interested in
+    """ 
+    Hidden layers of LSTM can be customized 
+    Parameter return_sequences is set to True because we are interested in 
+    classifying every output of the input sequence not just the final one.
+    """
 
     # define LSTM
     try:
@@ -125,8 +128,9 @@ def main_train(tag):
 
     # train LSTM
     for epoch in range(1000):
-        # generate new random sequence
+        # get new random word
         X, y, word = get_random_word(words, char_map)
+
         # fit model for one epoch on this sequence
         try:
             model.fit(X, y, epochs=1, batch_size=1, verbose=0)

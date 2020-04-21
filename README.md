@@ -16,7 +16,7 @@ Next we discuss the challenges associated with this problem,
 then the Design Decisions and finally how a classifier can be 
 trained.
 
-Issues
+Challenges
 ==
 
 Large number of roots
@@ -126,5 +126,9 @@ For more options run
     
 Expected to work on Python 3.6 or later 
 
-    
- 
+Contributing
+==
+
+Check the `CONTRIBUTING.md` file.
+
+
