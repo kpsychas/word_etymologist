@@ -110,6 +110,8 @@ classified.
 
 Run Training
 ==
+First uncompress `words.csv` file from `words.zip` compressed file.
+
 To train a NN run
 
     python train.py --program 1
