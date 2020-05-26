@@ -4,6 +4,13 @@ import dataset as ds
 import models as mdls
 
 
+class Command:
+    HELP = "help"
+    TRAIN = "train"
+    PREDICT = "predict"
+    INSPECT = "inspect"
+    EXIT = "exit"
+
 def print_cmd_help():
     print("help <cmd>: Prints details of command <cmd>")
 
@@ -40,13 +47,13 @@ def print_usage():
 
 
 def print_help(cmd=None):
-    if cmd == "help":
+    if cmd == Command.HELP:
         print_cmd_help()
-    elif cmd == "train":
+    elif cmd == Command.TRAIN:
         print_cmd_train()
-    elif cmd == "predict":
+    elif cmd == Command.PREDICT:
         print_cmd_predict()
-    elif cmd == "exit":
+    elif cmd == Command.EXIT:
         print_cmd_exit()
     else:
         print_usage()
@@ -76,17 +83,31 @@ def main(h_layers):
             # empty line
             continue
 
-        if cmd == "help":
+        if cmd == Command.HELP:
             try:
                 print_help(args[0])
             except IndexError:
                 print_help()
 
-        elif cmd == "train":
+        elif cmd == Command.TRAIN:
             word = args[0].lower()
             len_word = len(word)
-            root = list(map(int, args[1]))
-            X, y = mdls.get_bidirectional_model_input(char_map, word, root)
+            try:
+                root = list(map(int, args[1]))
+            except IndexError:
+                print(f"Command {Command.TRAIN} requires two arguments")
+                print_cmd_train()
+                continue
+            except ValueError:
+                print(f"Argument after '{word}' should be a string of 0 and 1 "
+                      f"of same length as '{word}'.")
+                continue
+
+            try:
+                X, y = mdls.get_bidirectional_model_input(char_map, word, root)
+            except KeyError:
+                print(f"Invalid word '{word}'")
+                continue
 
             if len_word not in model_dict:
                 new_model(model_dict, h_layers, len_map, len_word)
@@ -102,7 +123,7 @@ def main(h_layers):
                 print(f"Exception Arguments:\n{ex.args!r}")
 
             base_model.set_weights(model.get_weights())
-        elif cmd == "predict":
+        elif cmd == Command.PREDICT:
             word = args[0].lower()
             len_word = len(word)
             X = mdls.get_bidirectional_model_input(char_map, word)
@@ -115,9 +136,9 @@ def main(h_layers):
 
             yhat = model.predict_classes(X, verbose=0)
             print(f"Predicted: {yhat[0].flatten()}")
-        elif cmd == "inspect":
+        elif cmd == Command.INSPECT:
             print(base_model.summary())
-        elif cmd == "exit":
+        elif cmd == Command.EXIT:
             print("Saving weights")
             mdls.save_weights(base_model, tag)
             print("Exiting")
