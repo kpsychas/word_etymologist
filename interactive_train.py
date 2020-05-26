@@ -9,7 +9,9 @@ class Command:
     TRAIN = "train"
     PREDICT = "predict"
     INSPECT = "inspect"
+    SAVE = "save"
     EXIT = "exit"
+
 
 def print_cmd_help():
     print("help <cmd>: Prints details of command <cmd>")
@@ -32,6 +34,10 @@ def print_cmd_inspect():
     print("inspect: Prints information about the model")
 
 
+def print_cmd_save():
+    print("save: Saves trained weights (weights are save by default on exit)")
+
+
 def print_cmd_exit():
     print("exit: Exits")
 
@@ -39,11 +45,9 @@ def print_cmd_exit():
 def print_usage():
     print("Usage: <cmd> [<args>]")
     print("Commands:")
+    print([Command.HELP, Command.TRAIN, Command.PREDICT, Command.INSPECT,
+        Command.SAVE, Command.EXIT])
     print_cmd_help()
-    print_cmd_train()
-    print_cmd_predict()
-    print_cmd_inspect()
-    print_cmd_exit()
 
 
 def print_help(cmd=None):
@@ -53,6 +57,10 @@ def print_help(cmd=None):
         print_cmd_train()
     elif cmd == Command.PREDICT:
         print_cmd_predict()
+    elif cmd == Command.INSPECT:
+        print_cmd_inspect()
+    elif cmd == Command.SAVE:
+        print_cmd_save()
     elif cmd == Command.EXIT:
         print_cmd_exit()
     else:
@@ -155,6 +163,8 @@ def main(h_layers):
             print(f"Predicted: {yhat[0].flatten()}")
         elif cmd == Command.INSPECT:
             print(base_model.summary())
+        elif cmd == Command.SAVE:
+            mdls.save_weights(base_model, tag)
         elif cmd == Command.EXIT:
             print("Saving weights")
             mdls.save_weights(base_model, tag)
