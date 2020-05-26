@@ -52,6 +52,13 @@ def print_help(cmd=None):
         print_usage()
 
 
+def new_model(model_dict, h_layers, len_map, len_word):
+    model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len_word)
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    model_dict[len_word] = model
+
+
 def main(h_layers):
     tag = mdls.get_bidirectional_tag(h_layers)
     char_map = ds.get_char_mapping()
@@ -81,13 +88,10 @@ def main(h_layers):
             root = list(map(int, args[1]))
             X, y = mdls.get_bidirectional_model_input(char_map, word, root)
 
-            try:
-                model = model_dict[len_word]
-            except KeyError:
-                model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len_word)
-                model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-                model_dict[len_word] = model
+            if len_word not in model_dict:
+                new_model(model_dict, h_layers, len_map, len_word)
 
+            model = model_dict[len_word]
             model.set_weights(base_model.get_weights())
 
             try:
@@ -103,13 +107,10 @@ def main(h_layers):
             len_word = len(word)
             X = mdls.get_bidirectional_model_input(char_map, word)
 
-            try:
-                model = model_dict[len_word]
-            except KeyError:
-                model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len_word)
-                model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-                model_dict[len_word] = model
+            if len_word not in model_dict:
+                new_model(model_dict, h_layers, len_map, len_word)
 
+            model = model_dict[len_word]
             model.set_weights(base_model.get_weights())
 
             yhat = model.predict_classes(X, verbose=0)
