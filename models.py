@@ -5,7 +5,7 @@ from keras.models import Sequential, model_from_json
 from keras.layers import Bidirectional, Dense, LSTM, TimeDistributed
 
 
-def get_sequential_model_input(word, root, char_map, window):
+def get_sequential_model_input(char_map, window, word, root=None):
     len_word = len(word)
     len_map = len(char_map)
     word += (window - 1) * " "
@@ -13,30 +13,36 @@ def get_sequential_model_input(word, root, char_map, window):
     # create a sequence of random numbers in [0,1]
     X = np.array([char_map[c] for i in range(len_word) for c in word[i:i + window]])
     X = to_categorical(X, num_classes=len_map)
-    y = np.array(root)
-
     X = X.reshape((1, -1, len_map * window))
-    y = y.reshape((1, -1, 1))
 
-    return X, y
+    if root is not None:
+        y = np.array(root)
+        y = y.reshape((1, -1, 1))
+
+        return X, y
+    else:
+        return X
 
 
-def get_bidirectional_model_input(word, root, char_map):
+def get_bidirectional_model_input(char_map, word, root=None):
     len_map = len(char_map)
 
     # create a sequence of random numbers in [0,1]
     X = np.array([char_map[c] for c in word])
     X = to_categorical(X, num_classes=len_map)
-    y = np.array(root)
-
     X = X.reshape((1, -1, len_map))
-    y = y.reshape((1, -1, 1))
 
-    return X, y
+    if root is not None:
+        y = np.array(root)
+        y = y.reshape((1, -1, 1))
+
+        return X, y
+    else:
+        return X
 
 
-def get_sequential_tag(window, hidden_layers):
-    return f"model_{window}_{hidden_layers}"
+def get_sequential_tag(hidden_layers, window):
+    return f"model_{hidden_layers}_{window}"
 
 
 def get_bidirectional_tag(hidden_layers):
@@ -80,7 +86,12 @@ def save_sequential_model(model, tag):
 
 def load_weights(model, tag):
     model_weights_file = get_weights_file(tag)
-    model.load_weights(model_weights_file)
+    try:
+        model.load_weights(model_weights_file)
+    except OSError as e:
+        print(f"Failed to load weights from file {model_weights_file}, "
+              f"weights remain unchanged in their default initialization.")
+        print(e)
 
 
 def save_weights(model, tag):
@@ -105,3 +116,5 @@ def get_bidirectional_model(h_layers, len_map, n_timesteps):
     model = Sequential()
     model.add(Bidirectional(LSTM(h_layers, return_sequences=True), input_shape=(n_timesteps, len_map)))
     model.add(TimeDistributed(Dense(1, activation='sigmoid')))
+
+    return model

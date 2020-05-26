@@ -43,7 +43,7 @@ def parse_cmd():
     # size of window of characters to use as input
     # pads with empty characters at the end of a word
     WINDOW = 4
-    H_LAYERS = 200
+    H_LAYERS = 100
     PROGRAM = Program.TRAIN
 
     parser = argparse.ArgumentParser()
