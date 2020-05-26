@@ -60,6 +60,7 @@ def main(h_layers):
     base_model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=1)
     mdls.load_weights(base_model, tag)
 
+    model_dict = {}
     print_usage()
     while True:
         try:
@@ -76,11 +77,17 @@ def main(h_layers):
 
         elif cmd == "train":
             word = args[0].lower()
+            len_word = len(word)
             root = list(map(int, args[1]))
             X, y = mdls.get_bidirectional_model_input(char_map, word, root)
 
-            model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len(word))
-            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            try:
+                model = model_dict[len_word]
+            except KeyError:
+                model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len_word)
+                model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+                model_dict[len_word] = model
+
             model.set_weights(base_model.get_weights())
 
             try:
@@ -93,9 +100,16 @@ def main(h_layers):
             base_model.set_weights(model.get_weights())
         elif cmd == "predict":
             word = args[0].lower()
+            len_word = len(word)
             X = mdls.get_bidirectional_model_input(char_map, word)
 
-            model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len(word))
+            try:
+                model = model_dict[len_word]
+            except KeyError:
+                model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=len_word)
+                model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+                model_dict[len_word] = model
+
             model.set_weights(base_model.get_weights())
 
             yhat = model.predict_classes(X, verbose=0)
@@ -107,3 +121,5 @@ def main(h_layers):
             mdls.save_weights(base_model, tag)
             print("Exiting")
             break
+        else:
+            print(f"Unknown command: {cmd}")
