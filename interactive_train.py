@@ -90,7 +90,13 @@ def main(h_layers):
                 print_help()
 
         elif cmd == Command.TRAIN:
-            word = args[0].lower()
+            try:
+                word = args[0].lower()
+            except IndexError:
+                print(f"Command {Command.TRAIN} requires two arguments")
+                print_cmd_train()
+                continue
+
             len_word = len(word)
             try:
                 root = list(map(int, args[1]))
@@ -124,9 +130,20 @@ def main(h_layers):
 
             base_model.set_weights(model.get_weights())
         elif cmd == Command.PREDICT:
-            word = args[0].lower()
+            try:
+                word = args[0].lower()
+            except IndexError:
+                print(f"Command {Command.PREDICT} requires one argument")
+                print_cmd_predict()
+                continue
+
             len_word = len(word)
-            X = mdls.get_bidirectional_model_input(char_map, word)
+
+            try:
+                X = mdls.get_bidirectional_model_input(char_map, word)
+            except KeyError:
+                print(f"Invalid word '{word}'")
+                continue
 
             if len_word not in model_dict:
                 new_model(model_dict, h_layers, len_map, len_word)
