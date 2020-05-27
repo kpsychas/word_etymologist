@@ -1,7 +1,7 @@
 import shlex
 
 import dataset as ds
-import models as mdls
+from word_etymologist import models as mdls
 
 
 class Command:

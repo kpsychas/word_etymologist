@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import interactive_train as intt
-import batch_train as batt
+from word_etymologist import interactive_train as intt, batch_train as batt
 
 
 class Program:
