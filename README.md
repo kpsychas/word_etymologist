@@ -1,17 +1,17 @@
 Introduction
 ==
 
-Etymology of words if known can help us learn a 
+Etymology of words, if known, can help us learn a 
 language faster and understand it better. 
 To this end I wanted as a thought experiment to train a 
 NN to classify words based on their etymology.
 Since this is a big undertaking 
 _Word Etymologist_ will not fulfill this promise
 exactly. For the time being it can be trained
-on recognising English words of Greek origin. 
-The dataset it is trained on is very limited,
-thus evaluation is postponed until more data is 
-gathered.
+on recognising English words of Greek origin
+from a limited dataset or trained interactively
+to perform custom classification.
+
 Next we discuss the challenges associated with this problem, 
 then the Design Decisions and finally how a classifier can be 
 trained.
@@ -38,10 +38,10 @@ frequencies in similar applications.
 Words with multiple meanings
 --
 There are a lot of words with multiple
-meanings and likely different etymologies,
-but not necessarily.
-An example is `trunk` which has 4 meanings but
-only 2 etymologies according to etymonline.
+meanings and likely different etymologies.
+An example is `trunk` which has 4 meanings and
+2 etymologies according to 
+[etymonline dictionary](https://www.etymonline.com/word/trunk).
 
 Contested/Unknown etymologies
 --
@@ -53,10 +53,15 @@ accepted etymology.
 Invented words
 --
 Words are invented all the time and there is no 
-easy way to track their origin.
+easy way to track the origin of newly invented words.
+
 
 Design Decisions
 ==
+
+Decisions for automated training
+--
+
 I chose to create an English word dataset 
 with each word being annotated based on whether 
 its origin is Greek or not.
@@ -64,7 +69,7 @@ This simplifies classification since it is binary
 and I can verify etymology claims I look up 
 due to my knowledge of Greek (modern and ancient).
 Since it is possible that a word is combined from
-a greek and non greek word I annotate each letter
+a Greek and non Greek word I annotate each letter
 separately, while for words that their Greek origin
 is contested I have an intermediate classification
 (0 non Greek, 1 contested Greek, 2 Greek).
@@ -92,34 +97,55 @@ Context matters so the window size
 is possible to classify the first letter of a word
 by looking at the first `W` characters. 
 
-LSTM Networks are particularly successful
-at POS tagging and this problem is similar in
-nature as we don't know the number of letters
-in a word and we want to tag whether each letter
-of a word is Greek or not.
-Models are saved and optionally loaded
-again for training. This is essential
-as training dataset grows gradually.
-
- 
 It is expected that if features of a Greek word 
 are picked up from the Network, then even made up words 
 that combine existing Greek words will be successfully 
 classified.
 
+Decisions for interactive training
+--
+Interactive training works with Bidirectional LSTMs.
+For each different length of words a different network 
+needs to be created.
+Number of parameters are independent of the length of
+a word so parameters are loaded from one model to another
+after they are trained on an input. 
+Since the training is interactive,
+this does not delay training in any significant way.
+
+
+Other Decisions
+--
+Models and their parameters are saved to root folder
+and with default names that depend on the 
+number of hidden layers of the model and window size.
+
+In other words naming is by convention rather than 
+configuration, but until custom naming is supported
+an alternative is to backup and remove trained files 
+for models that you want to train from scratch.
 
 Run Training
 ==
-First uncompress `words.csv` file from `words.zip` compressed file.
 
-To train a NN run
+To automatically train a NN first uncompress `words.csv` file 
+from `words.zip` compressed file and then run
 
     python train.py --program 1
     
-To evaluate a NN run
+To evaluate a previously trained NN run
 
     python train.py --program 2
-    
+
+To train a NN interactively run
+
+    python train.py --program 3
+
+**[Recommended]**
+To train a NN interactively with a GUI run
+
+    python train.py --program 4
+
 For more options run
 
     python train.py --help
