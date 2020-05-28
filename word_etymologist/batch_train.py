@@ -1,7 +1,6 @@
 import random
 
-import dataset as ds
-from word_etymologist import models as mdls
+from word_etymologist import models as mdls, dataset as ds
 
 
 def get_random_word(words):

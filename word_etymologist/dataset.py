@@ -3,7 +3,7 @@ from collections import defaultdict
 import csv
 
 
-WORDS_FILE = "words.csv"
+WORDS_FILE = "../words.csv"
 
 
 def get_annotated_words(get_list=False):
@@ -29,7 +29,7 @@ def get_annotated_words(get_list=False):
     return words
 
 
-def get_char_mapping():
+def get_char_mapping(include_space=True):
     """
     Maps lowercase latin characters to a feature array.
 
@@ -38,8 +38,11 @@ def get_char_mapping():
     from string import ascii_lowercase
 
     C_LEN = len(ascii_lowercase)
+    if include_space:
+        char_map = {" ": C_LEN}
+    else:
+        char_map = {}
 
-    char_map = {" ": C_LEN}
     for i, c in enumerate(ascii_lowercase):
         char_map[c] = i
 

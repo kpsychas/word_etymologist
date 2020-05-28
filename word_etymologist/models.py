@@ -4,6 +4,8 @@ from keras.utils import to_categorical
 from keras.models import Sequential, model_from_json
 from keras.layers import Bidirectional, Dense, LSTM, TimeDistributed
 
+from word_etymologist import dataset as ds
+
 
 def get_sequential_model_input(char_map, window, word, root=None):
     len_word = len(word)
@@ -118,3 +120,69 @@ def get_bidirectional_model(h_layers, len_map, n_timesteps):
     model.add(TimeDistributed(Dense(1, activation='sigmoid')))
 
     return model
+
+
+class ModelWrapper:
+    def __init__(self, h_layers):
+        self.h_layers = h_layers
+        self.char_map = ds.get_char_mapping(include_space=False)
+        self.len_map = len(self.char_map)
+
+        self.base_model = get_bidirectional_model(h_layers, self.len_map, n_timesteps=1)
+        self.tag = get_bidirectional_tag(h_layers)
+        load_weights(self.base_model, self.tag)
+
+        self.model_dict = {}
+
+    def _add_model(self, len_word):
+        model = get_bidirectional_model(self.h_layers, self.len_map, n_timesteps=len_word)
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        self.model_dict[len_word] = model
+
+    def _get_model(self, word):
+        model_dict = self.model_dict
+        len_word = len(word)
+        if len_word not in model_dict:
+            self._add_model(len_word)
+
+        return model_dict[len_word]
+
+    def train(self, word, root):
+        base_model = self.base_model
+        model = self._get_model(word)
+
+        model.set_weights(base_model.get_weights())
+
+        try:
+            X, y = get_bidirectional_model_input(self.char_map, word, root)
+        except KeyError:
+            raise
+
+        try:
+            model.fit(X, y, epochs=1, batch_size=1, verbose=0)
+        except Exception as ex:
+            print(f"Exception of type {type(ex).__name__} "
+                  f"while training with word: {word}")
+            print(f"Exception Arguments:\n{ex.args!r}")
+            return
+
+        base_model.set_weights(model.get_weights())
+
+    def predict(self, word):
+        base_model = self.base_model
+        model = self._get_model(word)
+        model.set_weights(base_model.get_weights())
+
+        try:
+            X = get_bidirectional_model_input(self.char_map, word)
+        except KeyError:
+            raise
+
+        return model.predict_classes(X, verbose=0)
+
+    def save(self):
+        save_weights(self.base_model, self.tag)
+
+    def inspect(self):
+        print(self.base_model.summary())

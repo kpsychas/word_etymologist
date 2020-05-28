@@ -1,6 +1,5 @@
 import shlex
 
-import dataset as ds
 from word_etymologist import models as mdls
 
 
@@ -75,20 +74,14 @@ def new_model(model_dict, h_layers, len_map, len_word):
 
 
 def main(h_layers):
-    tag = mdls.get_bidirectional_tag(h_layers)
-    char_map = ds.get_char_mapping()
-    len_map = len(char_map)
+    model_wrapper = mdls.ModelWrapper(h_layers)
 
-    base_model = mdls.get_bidirectional_model(h_layers, len_map, n_timesteps=1)
-    mdls.load_weights(base_model, tag)
-
-    model_dict = {}
     print_usage()
     while True:
         try:
             cmd, *args = shlex.split(input('> '))
         except ValueError:
-            # empty line
+            # skip empty line
             continue
 
         if cmd == Command.HELP:
@@ -105,7 +98,6 @@ def main(h_layers):
                 print_cmd_train()
                 continue
 
-            len_word = len(word)
             try:
                 root = list(map(int, args[1]))
             except IndexError:
@@ -118,25 +110,12 @@ def main(h_layers):
                 continue
 
             try:
-                X, y = mdls.get_bidirectional_model_input(char_map, word, root)
+                model_wrapper.train(word, root)
             except KeyError:
-                print(f"Invalid word '{word}'")
+                print(f"Invalid characters in word '{word}'. "
+                      f"Only Latin characters are allowed")
                 continue
 
-            if len_word not in model_dict:
-                new_model(model_dict, h_layers, len_map, len_word)
-
-            model = model_dict[len_word]
-            model.set_weights(base_model.get_weights())
-
-            try:
-                model.fit(X, y, epochs=1, batch_size=1, verbose=0)
-            except Exception as ex:
-                print(f"Exception of type {type(ex).__name__} "
-                      f"while training with word: {word}")
-                print(f"Exception Arguments:\n{ex.args!r}")
-
-            base_model.set_weights(model.get_weights())
         elif cmd == Command.PREDICT:
             try:
                 word = args[0].lower()
@@ -145,29 +124,22 @@ def main(h_layers):
                 print_cmd_predict()
                 continue
 
-            len_word = len(word)
-
             try:
-                X = mdls.get_bidirectional_model_input(char_map, word)
+                yhat = model_wrapper.predict(word)
             except KeyError:
-                print(f"Invalid word '{word}'")
+                print(f"Invalid characters in word '{word}'. "
+                      f"Only Latin characters are allowed")
                 continue
+            else:
+                print(f"Predicted: {yhat[0].flatten()}")
 
-            if len_word not in model_dict:
-                new_model(model_dict, h_layers, len_map, len_word)
-
-            model = model_dict[len_word]
-            model.set_weights(base_model.get_weights())
-
-            yhat = model.predict_classes(X, verbose=0)
-            print(f"Predicted: {yhat[0].flatten()}")
         elif cmd == Command.INSPECT:
-            print(base_model.summary())
+            model_wrapper.inspect()
         elif cmd == Command.SAVE:
-            mdls.save_weights(base_model, tag)
+            model_wrapper.save()
         elif cmd == Command.EXIT:
             print("Saving weights")
-            mdls.save_weights(base_model, tag)
+            model_wrapper.save()
             print("Exiting")
             break
         else:
