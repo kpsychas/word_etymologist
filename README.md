@@ -1,20 +1,33 @@
 Introduction
 ==
 
-Etymology of words, if known, can help us learn a 
-language faster and understand it better. 
-To this end I wanted as a thought experiment to train a 
-NN to classify words based on their etymology.
-Since this is a big undertaking 
-_Word Etymologist_ will not fulfill this promise
-exactly. For the time being it can be trained
-on recognising English words of Greek origin
-from a limited dataset or trained interactively
-to perform custom classification.
+This project provides a platform for training a Neural Network
+on classification of words based on their etymology. 
+The Network can be trained interactively from command line or from a simple GUI
+or using a small dataset that distinguishes words between those of 
+Greek and non Greek origin.
 
-Next we discuss the challenges associated with this problem, 
+Next we discuss the motivation the challenges associated with this problem, 
 then the Design Decisions and finally how a classifier can be 
 trained.
+
+Motivation
+==
+Etymology of words, if known, can help us learn a 
+language faster and understand it better. 
+Learning any etymology is a big undertaking so
+_Word Etymologist_ partially fulfills this promise.
+For the time being it can be trained on recognising 
+English words of Greek origin from a limited dataset 
+or trained interactively to perform custom classification.
+
+An ideal fully featured solution should consist of a web service
+in which the user can do the following.
+- Contribute data for classification
+- Train different Neural Network models with data contributed by community
+or by themselves.
+- Use already trained models for prediction.
+
 
 Challenges
 ==
@@ -81,8 +94,8 @@ and there are words with the prefix
 It is also unlikely that a word has two meanings
 one with a greek root and another one without.
 The only example I came up with is `pan`
-which is not a word in Greek but rather a prefix.
-
+which actually is a prefix of Greek origin
+rather than a word.
 
 Training picks random words from dataset to 
 train an LSTM Neural Network.
@@ -122,8 +135,8 @@ number of hidden layers of the model and window size.
 
 In other words naming is by convention rather than 
 configuration, but until custom naming is supported
-an alternative is to backup and remove trained files 
-for models that you want to train from scratch.
+an alternative is to backup/rename trained files 
+of models that you want to train from scratch.
 
 Run Training
 ==
